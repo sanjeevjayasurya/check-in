@@ -77,7 +77,7 @@ class _SeniorHomeScreenState extends ConsumerState<SeniorHomeScreen>
   Future<void> _playCheckInConfirmation() async {
     await HapticFeedback.heavyImpact();
     try {
-      await _audioPlayer.play(AssetSource('sounds/check_in_success.mp3'));
+      await _audioPlayer.play(AssetSource('sounds/check_in_success.wav'));
     } catch (_) {
       await SystemSound.play(SystemSoundType.alert);
     }

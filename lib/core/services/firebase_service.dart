@@ -31,6 +31,8 @@ class FirebaseService {
     const messagingSenderId =
         String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID');
     const projectId = String.fromEnvironment('FIREBASE_PROJECT_ID');
+    const storageBucket = String.fromEnvironment('FIREBASE_STORAGE_BUCKET');
+    const iosBundleId = String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID');
 
     if (apiKey.isEmpty || appId.isEmpty) {
       if (kDebugMode) {
@@ -47,6 +49,12 @@ class FirebaseService {
       messagingSenderId:
           messagingSenderId.isNotEmpty ? messagingSenderId : '000000000000',
       projectId: projectId.isNotEmpty ? projectId : 'sunsafe-checkin-dev',
+      storageBucket: storageBucket.isNotEmpty
+          ? storageBucket
+          : 'sunsafe-checkin-dev.appspot.com',
+      iosBundleId: iosBundleId.isNotEmpty
+          ? iosBundleId
+          : 'com.sunsafe.sunsafe_checkin',
     );
   }
 }

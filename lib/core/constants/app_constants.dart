@@ -4,7 +4,7 @@ class AppConstants {
 
   // ── Asset paths ──────────────────────────────────────────────────────────
   static const String assetCheckInSuccessSound =
-      'assets/sounds/check_in_success.mp3';
+      'assets/sounds/check_in_success.wav';
   static const String assetCheckInSuccessAnimation =
       'assets/images/check_in_success.gif';
   static const String assetAppLogo = 'assets/images/sunsafe_logo.png';
