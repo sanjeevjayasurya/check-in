@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sunsafe_checkin/core/theme/app_theme.dart';
-import 'package:sunsafe_checkin/features/auth/presentation/role_selection_screen.dart';
+import 'package:sunsafe_checkin/features/auth/presentation/auth_gate.dart';
 import 'package:sunsafe_checkin/models/user_role.dart';
 
 /// Root application widget with role-aware theming.
@@ -16,7 +16,7 @@ class SunSafeApp extends ConsumerWidget {
       theme: AppTheme.caregiverTheme(),
       darkTheme: AppTheme.seniorTheme(),
       themeMode: ThemeMode.system,
-      home: const RoleSelectionScreen(),
+      home: const AuthGate(),
       builder: (context, child) {
         return MediaQuery.withClampedTextScaling(
           minScaleFactor: 1.0,

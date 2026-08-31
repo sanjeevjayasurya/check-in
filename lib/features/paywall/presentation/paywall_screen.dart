@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sunsafe_checkin/core/constants/app_constants.dart';
+import 'package:sunsafe_checkin/core/providers/service_providers.dart';
 import 'package:sunsafe_checkin/core/services/revenuecat_service.dart';
 
-/// RevenueCat paywall for premium features.
-/// Full purchase flow in Phase 6.
-class PaywallScreen extends StatelessWidget {
+/// RevenueCat paywall unlocking AI Digest and Voice Sentiment Tracking.
+class PaywallScreen extends ConsumerWidget {
   const PaywallScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('SunSafe Premium')),
       body: Padding(
@@ -42,26 +43,51 @@ class PaywallScreen extends StatelessWidget {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () async {
-                final offerings = await RevenueCatService.getOfferings();
-                if (offerings == null && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Unable to load subscription options.'),
-                    ),
-                  );
-                }
-              },
+              onPressed: () => _subscribe(context, ref),
               child: const Text('Subscribe'),
             ),
             TextButton(
-              onPressed: () => RevenueCatService.restorePurchases(),
+              onPressed: () async {
+                await RevenueCatService.restorePurchases();
+                ref.invalidate(premiumStatusProvider);
+                if (context.mounted) Navigator.of(context).pop();
+              },
               child: const Text('Restore Purchases'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _subscribe(BuildContext context, WidgetRef ref) async {
+    final offerings = await RevenueCatService.getOfferings();
+    final packages = offerings?.current?.availablePackages ?? [];
+
+    if (packages.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Subscription unavailable. Configure RevenueCat offerings.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      await RevenueCatService.purchasePackage(packages.first);
+      ref.invalidate(premiumStatusProvider);
+      if (context.mounted) Navigator.of(context).pop();
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.toString())),
+        );
+      }
+    }
   }
 }
 

@@ -14,12 +14,17 @@ class FirebaseService {
     if (_initialized) return;
 
     await Firebase.initializeApp(
-      options: _firebaseOptionsFromEnvironment(),
+      options: firebaseOptionsFromEnvironment(),
     );
     _initialized = true;
   }
 
-  static FirebaseOptions _firebaseOptionsFromEnvironment() {
+  /// Firebase options for background isolates (WorkManager callback).
+  static FirebaseOptions firebaseOptionsForBackground() {
+    return firebaseOptionsFromEnvironment();
+  }
+
+  static FirebaseOptions firebaseOptionsFromEnvironment() {
     // Replace with real values via --dart-define or flutter_dotenv in production.
     const apiKey = String.fromEnvironment('FIREBASE_API_KEY');
     const appId = String.fromEnvironment('FIREBASE_APP_ID');

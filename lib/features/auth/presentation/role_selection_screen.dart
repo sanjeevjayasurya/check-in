@@ -6,7 +6,9 @@ import 'package:sunsafe_checkin/models/user_role.dart';
 
 /// Onboarding entry point: "Who is using this phone?"
 class RoleSelectionScreen extends StatelessWidget {
-  const RoleSelectionScreen({super.key});
+  const RoleSelectionScreen({super.key, this.errorMessage});
+
+  final String? errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +41,25 @@ class RoleSelectionScreen extends StatelessWidget {
                   color: AppColors.seniorTextPrimary,
                 ),
               ),
-              const Spacer(flex: 2),
+              const Spacer(),
+              if (errorMessage != null) ...[
+                Text(
+                  errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.seniorError,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               _RoleButton(
                 label: 'Me — Senior Mode',
                 subtitle: 'Simple daily check-in',
                 icon: Icons.wb_sunny_outlined,
                 onTap: () => _navigateToAuth(context, UserRole.senior),
               ),
-              const SizedBox(height: 20),
+              const Spacer(flex: 2),
               _RoleButton(
                 label: 'My Parent — Caregiver Mode',
                 subtitle: 'Monitor & send greetings',
