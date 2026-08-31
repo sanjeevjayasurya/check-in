@@ -14,6 +14,7 @@ class AppConstants {
   static const String familiesCollection = 'families';
   static const String checkInsSubcollection = 'checkins';
   static const String greetingsSubcollection = 'greetings';
+  static const String voiceNotesSubcollection = 'voice_notes';
   static const String telemetrySubcollection = 'telemetry';
   static const String usersCollection = 'users';
 
@@ -53,5 +54,6 @@ class AppConstants {
 
   // ── Hive box names ─────────────────────────────────────────────────────────
   static const String hiveBoxCheckIns = 'pending_checkins';
+  static const String hiveBoxVoiceNotes = 'pending_voice_notes';
   static const String hiveBoxSettings = 'app_settings';
 }

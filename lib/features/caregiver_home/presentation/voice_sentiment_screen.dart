@@ -1,11 +1,20 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:sunsafe_checkin/core/providers/service_providers.dart';
 
 class VoiceSentimentScreen extends ConsumerStatefulWidget {
-  const VoiceSentimentScreen({super.key, required this.audioPath});
+  const VoiceSentimentScreen({
+    super.key,
+    required this.audioPath,
+    this.isRemoteUrl = false,
+  });
 
   final String audioPath;
+  final bool isRemoteUrl;
 
   @override
   ConsumerState<VoiceSentimentScreen> createState() =>
@@ -20,9 +29,12 @@ class _VoiceSentimentScreenState extends ConsumerState<VoiceSentimentScreen> {
   Future<void> _analyze() async {
     setState(() => _isAnalyzing = true);
     try {
+      final localPath = widget.isRemoteUrl
+          ? await _downloadRemoteFile(widget.audioPath)
+          : widget.audioPath;
       final result = await ref
           .read(openAiServiceProvider)
-          .transcribeAndAnalyzeVoice(widget.audioPath);
+          .transcribeAndAnalyzeVoice(localPath);
       setState(() {
         _transcript = result.transcript;
         _sentiment = result.sentiment;
@@ -36,6 +48,15 @@ class _VoiceSentimentScreenState extends ConsumerState<VoiceSentimentScreen> {
     } finally {
       if (mounted) setState(() => _isAnalyzing = false);
     }
+  }
+
+  Future<String> _downloadRemoteFile(String url) async {
+    final response = await http.get(Uri.parse(url));
+    final dir = await getTemporaryDirectory();
+    final filePath =
+        '${dir.path}/voice_analysis_${DateTime.now().millisecondsSinceEpoch}.m4a';
+    await File(filePath).writeAsBytes(response.bodyBytes);
+    return filePath;
   }
 
   @override

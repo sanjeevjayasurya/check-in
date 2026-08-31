@@ -4,19 +4,61 @@ import 'package:intl/intl.dart';
 import 'package:sunsafe_checkin/app.dart';
 import 'package:sunsafe_checkin/core/providers/service_providers.dart';
 import 'package:sunsafe_checkin/features/auth/providers/auth_providers.dart';
+import 'package:sunsafe_checkin/features/caregiver_home/data/caregiver_alert_monitor.dart';
 import 'package:sunsafe_checkin/features/caregiver_home/presentation/ai_digest_screen.dart';
 import 'package:sunsafe_checkin/features/caregiver_home/presentation/alert_settings_screen.dart';
 import 'package:sunsafe_checkin/features/caregiver_home/presentation/send_greeting_screen.dart';
+import 'package:sunsafe_checkin/features/caregiver_home/presentation/senior_voice_notes_screen.dart';
 import 'package:sunsafe_checkin/features/caregiver_home/providers/caregiver_providers.dart';
 import 'package:sunsafe_checkin/features/paywall/presentation/paywall_screen.dart';
 import 'package:sunsafe_checkin/models/user_role.dart';
 
 /// Caregiver dashboard with real-time parent status from Firestore streams.
-class CaregiverHomeScreen extends ConsumerWidget {
+class CaregiverHomeScreen extends ConsumerStatefulWidget {
   const CaregiverHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CaregiverHomeScreen> createState() =>
+      _CaregiverHomeScreenState();
+}
+
+class _CaregiverHomeScreenState extends ConsumerState<CaregiverHomeScreen> {
+  CaregiverAlertMonitor? _alertMonitor;
+
+  @override
+  void initState() {
+    super.initState();
+    _alertMonitor = ref.read(caregiverAlertMonitorProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initializeCaregiver());
+  }
+
+  Future<void> _initializeCaregiver() async {
+    final user = await ref.read(currentAppUserProvider.future);
+    if (user == null) return;
+
+    await ref.read(userProfileRepositoryProvider).saveFcmToken(user.uid);
+
+    final family = ref.read(currentFamilyProvider).valueOrNull;
+    if (family != null) {
+      _alertMonitor?.startMonitoring(family);
+    }
+  }
+
+  @override
+  void dispose() {
+    _alertMonitor?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(currentFamilyProvider, (previous, next) {
+      final family = next.valueOrNull;
+      if (family != null) {
+        _alertMonitor?.startMonitoring(family);
+      }
+    });
+
     final familyAsync = ref.watch(currentFamilyProvider);
     final checkInAsync = ref.watch(latestCheckInProvider);
     final telemetryAsync = ref.watch(latestTelemetryProvider);
@@ -49,6 +91,7 @@ class CaregiverHomeScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async {
+                _alertMonitor?.stop();
                 await ref.read(authRepositoryProvider).signOut();
                 ref.invalidate(currentAppUserProvider);
               },
@@ -106,6 +149,23 @@ class CaregiverHomeScreen extends ConsumerWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const SendGreetingScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.mic),
+              title: const Text('Parent Voice Notes'),
+              subtitle: Text(
+                isPremium
+                    ? 'Listen & analyze sentiment'
+                    : 'Premium sentiment — \$7.99/month',
+              ),
+              trailing: Icon(isPremium ? Icons.chevron_right : Icons.lock),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const SeniorVoiceNotesScreen(),
                   ),
                 );
               },

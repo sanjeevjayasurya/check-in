@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isFamilyMember(familyId) {
+      return isSignedIn()
+        && userDoc().data.familyId == familyId;
+    }
+
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /families/{familyId} {
+      allow read: if isFamilyMember(familyId);
+      allow create: if isSignedIn();
+      allow update: if isFamilyMember(familyId);
+
+      match /checkins/{date} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isFamilyMember(familyId);
+      }
+
+      match /greetings/{date} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isFamilyMember(familyId);
+      }
+
+      match /voice_notes/{noteId} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isFamilyMember(familyId);
+      }
+
+      match /telemetry/{logId} {
+        allow read: if isFamilyMember(familyId);
+        allow write: if isFamilyMember(familyId);
+      }
+    }
+  }
+}

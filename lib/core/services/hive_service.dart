@@ -8,6 +8,7 @@ class HiveService {
   static Future<void> initialize() async {
     await Hive.initFlutter();
     await Hive.openBox<Map<dynamic, dynamic>>(AppConstants.hiveBoxCheckIns);
+    await Hive.openBox<Map<dynamic, dynamic>>(AppConstants.hiveBoxVoiceNotes);
     await Hive.openBox(AppConstants.hiveBoxSettings);
   }
 }

@@ -40,20 +40,28 @@ class _SeniorHomeScreenState extends ConsumerState<SeniorHomeScreen>
       curve: Curves.elasticOut,
     );
     BackgroundTelemetryTask.register();
-    _persistSeniorBackgroundContext();
+    _initializeSeniorSession();
   }
 
-  Future<void> _persistSeniorBackgroundContext() async {
+  Future<void> _initializeSeniorSession() async {
     final user = await ref.read(currentAppUserProvider.future);
-    final family = ref.read(currentFamilyProvider).valueOrNull;
     if (user == null) return;
 
+    await ref
+        .read(checkInRepositoryProvider)
+        .syncPendingCheckIns(user.familyId);
+    await ref.read(voiceNoteRepositoryProvider).syncPendingVoiceNotes(
+          user.familyId,
+          user.uid,
+        );
+
+    final family = ref.read(currentFamilyProvider).valueOrNull;
     await BackgroundTelemetryTask.persistSeniorContext(
       familyId: user.familyId,
       seniorId: user.uid,
       seniorDisplayName: family?.seniorDisplayName ?? 'Parent',
-      deadlineHour:
-          family?.alertSettings.deadlineHour ?? AppConstants.defaultCheckInDeadlineHour,
+      deadlineHour: family?.alertSettings.deadlineHour ??
+          AppConstants.defaultCheckInDeadlineHour,
       deadlineMinute: family?.alertSettings.deadlineMinute ??
           AppConstants.defaultCheckInDeadlineMinute,
     );
@@ -66,13 +74,21 @@ class _SeniorHomeScreenState extends ConsumerState<SeniorHomeScreen>
     super.dispose();
   }
 
+  Future<void> _playCheckInConfirmation() async {
+    await HapticFeedback.heavyImpact();
+    try {
+      await _audioPlayer.play(AssetSource('sounds/check_in_success.mp3'));
+    } catch (_) {
+      await SystemSound.play(SystemSoundType.alert);
+    }
+  }
+
   Future<void> _handleCheckIn() async {
     final user = await ref.read(currentAppUserProvider.future);
     if (user == null || _isSubmitting) return;
 
     setState(() => _isSubmitting = true);
-    await HapticFeedback.heavyImpact();
-    await SystemSound.play(SystemSoundType.click);
+    await _playCheckInConfirmation();
 
     try {
       await ref.read(checkInRepositoryProvider).submitCheckIn(
@@ -97,9 +113,20 @@ class _SeniorHomeScreenState extends ConsumerState<SeniorHomeScreen>
     try {
       if (await service.isRecording()) {
         final path = await service.stopRecording();
-        if (mounted && path != null) {
+        if (path == null) return;
+
+        final user = await ref.read(currentAppUserProvider.future);
+        if (user != null) {
+          await ref.read(voiceNoteRepositoryProvider).uploadVoiceNote(
+                familyId: user.familyId,
+                seniorId: user.uid,
+                localPath: path,
+              );
+        }
+
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Voice note saved!')),
+            const SnackBar(content: Text('Voice note sent to your family!')),
           );
         }
       } else {

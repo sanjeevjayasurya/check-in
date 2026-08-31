@@ -1,0 +1,12 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "families",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "inviteCode", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

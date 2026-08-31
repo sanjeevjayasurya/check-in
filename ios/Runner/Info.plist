@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Sunsafe Checkin</string>
+	<string>SunSafe Check-In</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -65,6 +65,17 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SunSafe needs microphone access so you can leave voice notes for your family.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SunSafe needs photo access so caregivers can send daily greeting photos.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SunSafe needs camera access so caregivers can send daily greeting photos.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
 	</array>
 </dict>
 </plist>
