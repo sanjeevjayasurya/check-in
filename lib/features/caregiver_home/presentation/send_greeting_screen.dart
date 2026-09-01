@@ -3,8 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sunsafe_checkin/app.dart';
 import 'package:sunsafe_checkin/core/providers/service_providers.dart';
+import 'package:sunsafe_checkin/core/theme/app_spacing.dart';
+import 'package:sunsafe_checkin/core/utils/user_friendly_error.dart';
+import 'package:sunsafe_checkin/core/widgets/greeting_card.dart';
+import 'package:sunsafe_checkin/core/widgets/primary_cta.dart';
+import 'package:sunsafe_checkin/core/widgets/wizard_step_header.dart';
 import 'package:sunsafe_checkin/features/auth/providers/auth_providers.dart';
+import 'package:sunsafe_checkin/models/user_role.dart';
 
 class SendGreetingScreen extends ConsumerStatefulWidget {
   const SendGreetingScreen({super.key});
@@ -14,20 +21,31 @@ class SendGreetingScreen extends ConsumerStatefulWidget {
 }
 
 class _SendGreetingScreenState extends ConsumerState<SendGreetingScreen> {
+  final _pageController = PageController();
   final _messageController = TextEditingController();
   File? _photoFile;
   String? _voicePath;
   bool _isSaving = false;
 
+  static const _prompts = ['Thinking of you', 'Love you', 'Hope you have a sunny day'];
+
   @override
   void dispose() {
+    _pageController.dispose();
     _messageController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickPhoto() async {
+  Future<void> _nextPage() async {
+    await _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  Future<void> _pickPhoto(ImageSource source) async {
     final picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
+    final image = await picker.pickImage(source: source);
     if (image != null) {
       setState(() => _photoFile = File(image.path));
     }
@@ -41,7 +59,7 @@ class _SendGreetingScreenState extends ConsumerState<SendGreetingScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
+          SnackBar(content: Text(userFriendlyError(error))),
         );
       }
     }
@@ -89,7 +107,7 @@ class _SendGreetingScreenState extends ConsumerState<SendGreetingScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
+          SnackBar(content: Text(userFriendlyError(error))),
         );
       }
     } finally {
@@ -99,40 +117,114 @@ class _SendGreetingScreenState extends ConsumerState<SendGreetingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Send Daily Greeting')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          TextField(
-            controller: _messageController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Short message (optional)',
-              border: OutlineInputBorder(),
+    final userName = ref.watch(currentAppUserProvider).valueOrNull?.displayName ?? 'You';
+
+    return RoleThemedScope(
+      role: UserRole.caregiver,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Send love')),
+        body: PageView(
+          controller: _pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const WizardStepHeader(
+                    step: 1,
+                    totalSteps: 3,
+                    title: 'Write a short message',
+                    subtitle: 'Keep it warm and simple.',
+                  ),
+                  Wrap(
+                    spacing: AppSpacing.sm,
+                    children: _prompts
+                        .map(
+                          (prompt) => ActionChip(
+                            label: Text(prompt),
+                            onPressed: () {
+                              _messageController.text = prompt;
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextField(
+                    controller: _messageController,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      hintText: 'Your message…',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const Spacer(),
+                  PrimaryCta(label: 'Continue', onPressed: _nextPage),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
-            leading: const Icon(Icons.photo),
-            title: const Text('Add Photo'),
-            subtitle: _photoFile != null ? Text(_photoFile!.path.split('/').last) : null,
-            onTap: _pickPhoto,
-          ),
-          ListTile(
-            leading: const Icon(Icons.mic),
-            title: const Text('Record 15-Second Voice Note'),
-            subtitle: _voicePath != null ? const Text('Recording saved') : null,
-            onTap: _recordVoice,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const CircularProgressIndicator()
-                : const Text('Send Greeting'),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const WizardStepHeader(
+                    step: 2,
+                    totalSteps: 3,
+                    title: 'Add a photo or voice (optional)',
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.photo_camera),
+                    title: const Text('Take photo'),
+                    onTap: () => _pickPhoto(ImageSource.camera),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.photo_library),
+                    title: const Text('Choose from gallery'),
+                    onTap: () => _pickPhoto(ImageSource.gallery),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.mic),
+                    title: const Text('Record 15-second voice'),
+                    subtitle: _voicePath != null ? const Text('Recording saved') : null,
+                    onTap: _recordVoice,
+                  ),
+                  const Spacer(),
+                  PrimaryCta(label: 'Preview', onPressed: _nextPage),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const WizardStepHeader(
+                    step: 3,
+                    totalSteps: 3,
+                    title: 'Preview as your parent will see it',
+                  ),
+                  GreetingCardWidget(
+                    fromName: userName,
+                    message: _messageController.text.trim().isEmpty
+                        ? null
+                        : _messageController.text.trim(),
+                    localPhoto: _photoFile,
+                    onPlayVoice: _voicePath != null ? () {} : null,
+                  ),
+                  const Spacer(),
+                  PrimaryCta(
+                    label: 'Send greeting',
+                    isLoading: _isSaving,
+                    onPressed: _save,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

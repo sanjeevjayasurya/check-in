@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sunsafe_checkin/core/providers/onboarding_providers.dart';
 import 'package:sunsafe_checkin/core/theme/app_theme.dart';
 import 'package:sunsafe_checkin/features/auth/presentation/auth_gate.dart';
 import 'package:sunsafe_checkin/models/user_role.dart';
@@ -14,8 +15,7 @@ class SunSafeApp extends ConsumerWidget {
       title: 'SunSafe Check-In',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.caregiverTheme(),
-      darkTheme: AppTheme.seniorTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       home: const AuthGate(),
       builder: (context, child) {
         return MediaQuery.withClampedTextScaling(
@@ -29,7 +29,7 @@ class SunSafeApp extends ConsumerWidget {
 }
 
 /// Applies the correct theme wrapper based on the active user role.
-class RoleThemedScope extends StatelessWidget {
+class RoleThemedScope extends ConsumerWidget {
   const RoleThemedScope({
     super.key,
     required this.role,
@@ -40,15 +40,15 @@ class RoleThemedScope extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final highContrast = ref.watch(seniorHighContrastProvider);
     final theme = role == UserRole.senior
-        ? AppTheme.seniorTheme()
+        ? (highContrast
+            ? AppTheme.seniorDarkTheme()
+            : AppTheme.seniorCreamTheme())
         : AppTheme.caregiverTheme();
 
-    final themedChild = Theme(
-      data: theme,
-      child: child,
-    );
+    final themedChild = Theme(data: theme, child: child);
 
     if (role == UserRole.senior) {
       return SeniorAccessibleScope(child: themedChild);

@@ -40,6 +40,16 @@ class CaregiverRepository {
         .update({'alertSettings': settings.toMap()});
   }
 
+  Future<void> updateSeniorDisplayName({
+    required String familyId,
+    required String displayName,
+  }) async {
+    await _firestore
+        .collection(AppConstants.familiesCollection)
+        .doc(familyId)
+        .update({'seniorDisplayName': displayName});
+  }
+
   Future<String> uploadGreetingPhoto({
     required String familyId,
     required File photoFile,

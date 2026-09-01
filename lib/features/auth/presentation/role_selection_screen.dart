@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:sunsafe_checkin/app.dart';
+import 'package:sunsafe_checkin/core/theme/app_spacing.dart';
 import 'package:sunsafe_checkin/core/theme/app_theme.dart';
-import 'package:sunsafe_checkin/features/auth/presentation/caregiver_auth_screen.dart';
-import 'package:sunsafe_checkin/features/auth/presentation/senior_auth_screen.dart';
+import 'package:sunsafe_checkin/core/widgets/role_selection_card.dart';
+import 'package:sunsafe_checkin/features/onboarding/presentation/caregiver_onboarding_screen.dart';
+import 'package:sunsafe_checkin/features/onboarding/presentation/senior_onboarding_screen.dart';
 import 'package:sunsafe_checkin/models/user_role.dart';
 
 /// Onboarding entry point: "Who is using this phone?"
@@ -12,143 +15,94 @@ class RoleSelectionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.seniorBackground,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Text(
-                '☀️ SunSafe\nCheck-In',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.seniorPrimary,
-                  height: 1.2,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Who is using this phone?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: kSeniorMinFontSize,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.seniorTextPrimary,
-                ),
-              ),
-              const Spacer(),
-              if (errorMessage != null) ...[
-                Text(
-                  errorMessage!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppColors.seniorError,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-              _RoleButton(
-                label: 'Me — Senior Mode',
-                subtitle: 'Simple daily check-in',
-                icon: Icons.wb_sunny_outlined,
-                onTap: () => _navigateToAuth(context, UserRole.senior),
-              ),
-              const Spacer(flex: 2),
-              _RoleButton(
-                label: 'My Parent — Caregiver Mode',
-                subtitle: 'Monitor & send greetings',
-                icon: Icons.family_restroom,
-                onTap: () => _navigateToAuth(context, UserRole.caregiver),
-              ),
-              const Spacer(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToAuth(BuildContext context, UserRole role) {
-    final screen = role == UserRole.senior
-        ? const SeniorAuthScreen()
-        : const CaregiverAuthScreen();
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => screen),
-    );
-  }
-}
-
-class _RoleButton extends StatelessWidget {
-  const _RoleButton({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final String subtitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: AppColors.seniorSurface,
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: kSeniorMinTouchTarget),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-            child: Row(
+    return RoleThemedScope(
+      role: UserRole.senior,
+      child: Scaffold(
+        backgroundColor: AppColors.seniorCreamBackground,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(icon, size: 40, color: AppColors.seniorPrimary),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: kSeniorMinFontSize,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.seniorTextPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: AppColors.seniorTextSecondary,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: AppSpacing.lg),
+                const Text(
+                  'SunSafe Check-In',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.seniorCreamTextPrimary,
+                    height: 1.2,
                   ),
                 ),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: AppColors.seniorTextSecondary,
-                  size: 20,
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  '☀️',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 48),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Who is using this phone?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: kSeniorMinFontSize,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.seniorCreamTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const Text(
+                  'Your parent controls what they share.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: AppColors.seniorCreamTextSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                if (errorMessage != null) ...[
+                  Text(
+                    errorMessage!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppColors.seniorError,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                RoleSelectionCard(
+                  label: 'Me — Senior Mode',
+                  subtitle: 'Simple daily check-in',
+                  icon: Icons.wb_sunny_outlined,
+                  isSeniorRole: true,
+                  onTap: () => _navigateToOnboarding(context, UserRole.senior),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                RoleSelectionCard(
+                  label: 'My Parent — Caregiver Mode',
+                  subtitle: 'Monitor and send love',
+                  icon: Icons.family_restroom,
+                  isSeniorRole: false,
+                  onTap: () => _navigateToOnboarding(context, UserRole.caregiver),
+                ),
+                const SizedBox(height: AppSpacing.lg),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  void _navigateToOnboarding(BuildContext context, UserRole role) {
+    final screen = role == UserRole.senior
+        ? const SeniorOnboardingScreen()
+        : const CaregiverOnboardingScreen();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => screen),
     );
   }
 }

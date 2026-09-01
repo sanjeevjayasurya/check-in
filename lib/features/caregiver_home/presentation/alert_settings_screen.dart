@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sunsafe_checkin/app.dart';
 import 'package:sunsafe_checkin/core/providers/service_providers.dart';
+import 'package:sunsafe_checkin/core/theme/app_spacing.dart';
+import 'package:sunsafe_checkin/core/utils/user_friendly_error.dart';
+import 'package:sunsafe_checkin/core/widgets/primary_cta.dart';
 import 'package:sunsafe_checkin/features/auth/providers/auth_providers.dart';
 import 'package:sunsafe_checkin/models/alert_settings.dart';
+import 'package:sunsafe_checkin/models/user_role.dart';
 
 class AlertSettingsScreen extends ConsumerStatefulWidget {
   const AlertSettingsScreen({super.key});
@@ -17,6 +22,7 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
   late int _deadlineMinute;
   late bool _escalationEnabled;
   late bool _lowBatteryAlerts;
+  late List<String> _contacts;
   final _contactController = TextEditingController();
   bool _isSaving = false;
 
@@ -30,6 +36,7 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     _deadlineMinute = settings.deadlineMinute;
     _escalationEnabled = settings.escalationEnabled;
     _lowBatteryAlerts = settings.lowBatteryAlertsEnabled;
+    _contacts = List<String>.from(settings.emergencyContacts);
   }
 
   @override
@@ -42,21 +49,14 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     setState(() => _isSaving = true);
     try {
       final family = ref.read(currentFamilyProvider).valueOrNull;
-      final user = await ref.read(currentAppUserProvider.future);
-      if (family == null || user == null) return;
-
-      final contacts = List<String>.from(family.alertSettings.emergencyContacts);
-      final newContact = _contactController.text.trim();
-      if (newContact.isNotEmpty && !contacts.contains(newContact)) {
-        contacts.add(newContact);
-      }
+      if (family == null) return;
 
       await ref.read(caregiverRepositoryProvider).updateAlertSettings(
             familyId: family.id,
             settings: AlertSettings(
               deadlineHour: _deadlineHour,
               deadlineMinute: _deadlineMinute,
-              emergencyContacts: contacts,
+              emergencyContacts: _contacts,
               escalationEnabled: _escalationEnabled,
               lowBatteryAlertsEnabled: _lowBatteryAlerts,
             ),
@@ -67,6 +67,12 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
           const SnackBar(content: Text('Alert settings saved.')),
         );
         Navigator.of(context).pop();
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(userFriendlyError(error))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -86,50 +92,101 @@ class _AlertSettingsScreenState extends ConsumerState<AlertSettingsScreen> {
     }
   }
 
+  void _addContact() {
+    final value = _contactController.text.trim();
+    if (value.isEmpty || _contacts.contains(value)) return;
+    setState(() {
+      _contacts.add(value);
+      _contactController.clear();
+    });
+  }
+
+  void _removeContact(String contact) {
+    setState(() => _contacts.remove(contact));
+  }
+
   @override
   Widget build(BuildContext context) {
     final deadlineLabel =
         '${_deadlineHour.toString().padLeft(2, '0')}:${_deadlineMinute.toString().padLeft(2, '0')}';
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Alert Settings')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          ListTile(
-            title: const Text('Check-in Deadline'),
-            subtitle: Text('Alert if not checked in by $deadlineLabel'),
-            trailing: const Icon(Icons.schedule),
-            onTap: _pickDeadline,
-          ),
-          SwitchListTile(
-            title: const Text('Escalation Alerts'),
-            subtitle: const Text('Notify emergency contacts if check-in missed'),
-            value: _escalationEnabled,
-            onChanged: (value) => setState(() => _escalationEnabled = value),
-          ),
-          SwitchListTile(
-            title: const Text('Low Battery Alerts'),
-            value: _lowBatteryAlerts,
-            onChanged: (value) => setState(() => _lowBatteryAlerts = value),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _contactController,
-            decoration: const InputDecoration(
-              labelText: 'Add Emergency Contact (phone)',
-              border: OutlineInputBorder(),
+    return RoleThemedScope(
+      role: UserRole.caregiver,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Alert Settings')),
+        body: ListView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          children: [
+            ListTile(
+              title: const Text('Check-in deadline'),
+              subtitle: Text('Alert if not checked in by $deadlineLabel'),
+              trailing: const Icon(Icons.schedule),
+              onTap: _pickDeadline,
             ),
-            keyboardType: TextInputType.phone,
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const CircularProgressIndicator()
-                : const Text('Save Settings'),
-          ),
-        ],
+            SwitchListTile(
+              title: const Text('Escalation alerts'),
+              subtitle: const Text('Notify emergency contacts if check-in is missed'),
+              value: _escalationEnabled,
+              onChanged: (value) => setState(() => _escalationEnabled = value),
+            ),
+            SwitchListTile(
+              title: const Text('Low battery alerts'),
+              value: _lowBatteryAlerts,
+              onChanged: (value) => setState(() => _lowBatteryAlerts = value),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text('Emergency contacts', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            if (_contacts.isEmpty)
+              const Text('Add a phone number your parent can call for help.'),
+            ..._contacts.map(
+              (contact) => ListTile(
+                title: Text(contact),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _removeContact(contact),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _contactController,
+                    decoration: const InputDecoration(
+                      labelText: 'Phone number',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                FilledButton(
+                  onPressed: _addContact,
+                  child: const Text('Add'),
+                ),
+              ],
+            ),
+            if (_contacts.isNotEmpty && _escalationEnabled) ...[
+              const SizedBox(height: AppSpacing.md),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Text(
+                    'If ${_contacts.first} is unavailable, we notify the next contact in order.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            PrimaryCta(
+              label: 'Save settings',
+              isLoading: _isSaving,
+              onPressed: _save,
+            ),
+          ],
+        ),
       ),
     );
   }

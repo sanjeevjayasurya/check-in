@@ -11,7 +11,7 @@ final latestCheckInProvider = StreamProvider<CheckInRecord?>((ref) {
       if (family == null) return Stream.value(null);
       return ref
           .watch(checkInRepositoryProvider)
-          .watchLatestCheckIn(family.id);
+          .watchTodayCheckIn(family.id);
     },
     loading: () => Stream.value(null),
     error: (_, __) => Stream.value(null),

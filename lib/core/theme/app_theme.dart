@@ -7,10 +7,16 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // High-contrast senior palette (tested ≥ 4.5:1 on white / dark backgrounds)
+  // Senior cream palette (default — warm, AgeCare-inspired)
+  static const Color seniorCreamBackground = Color(0xFFFFF8E7);
+  static const Color seniorCreamSurface = Color(0xFFFFFFFF);
+  static const Color seniorCreamTextPrimary = Color(0xFF1A1A2E);
+  static const Color seniorCreamTextSecondary = Color(0xFF546E7A);
+
+  // High-contrast senior palette (toggle in settings)
   static const Color seniorBackground = Color(0xFF0D1117);
   static const Color seniorSurface = Color(0xFF1A2332);
-  static const Color seniorPrimary = Color(0xFFFFD54F); // warm sun yellow
+  static const Color seniorPrimary = Color(0xFFFFC947);
   static const Color seniorOnPrimary = Color(0xFF1A1200);
   static const Color seniorSuccess = Color(0xFF4CAF50);
   static const Color seniorOnSuccess = Color(0xFF0A1F0A);
@@ -18,6 +24,13 @@ class AppColors {
   static const Color seniorOnError = Color(0xFF1A0000);
   static const Color seniorTextPrimary = Color(0xFFFFFFFF);
   static const Color seniorTextSecondary = Color(0xFFB0BEC5);
+
+  static const Color statusSuccessBg = Color(0xFFE8F5E9);
+  static const Color statusSuccessFg = Color(0xFF2E7D32);
+  static const Color statusWarningBg = Color(0xFFFFF3E0);
+  static const Color statusWarningFg = Color(0xFFE65100);
+  static const Color statusErrorBg = Color(0xFFFFEBEE);
+  static const Color statusErrorFg = Color(0xFFC62828);
 
   // Caregiver palette — still accessible, slightly denser information density
   static const Color caregiverBackground = Color(0xFFF5F7FA);
@@ -44,8 +57,81 @@ const double kSeniorCheckInButtonHeight = 120.0;
 class AppTheme {
   AppTheme._();
 
-  /// Builds the high-contrast theme used on Senior screens.
-  static ThemeData seniorTheme({TextScaler? textScaler}) {
+  /// Default senior theme — warm cream background.
+  static ThemeData seniorCreamTheme() {
+    final base = ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: AppColors.seniorCreamBackground,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.seniorPrimary,
+        onPrimary: AppColors.seniorOnPrimary,
+        secondary: AppColors.seniorSuccess,
+        onSecondary: AppColors.seniorOnSuccess,
+        error: AppColors.seniorError,
+        onError: AppColors.seniorOnError,
+        surface: AppColors.seniorCreamSurface,
+        onSurface: AppColors.seniorCreamTextPrimary,
+      ),
+    );
+
+    return base.copyWith(
+      textTheme: _seniorTextTheme(
+        base.textTheme,
+        primary: AppColors.seniorCreamTextPrimary,
+        secondary: AppColors.seniorCreamTextSecondary,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(double.infinity, kSeniorCheckInButtonHeight),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          textStyle: const TextStyle(
+            fontSize: kSeniorHeadlineFontSize,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(kSeniorMinTouchTarget, kSeniorMinTouchTarget),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          textStyle: const TextStyle(
+            fontSize: kSeniorMinFontSize,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          minimumSize: const Size(kSeniorMinTouchTarget, kSeniorMinTouchTarget),
+          iconSize: 36,
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.seniorCreamSurface,
+        foregroundColor: AppColors.seniorCreamTextPrimary,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          fontSize: kSeniorHeadlineFontSize,
+          fontWeight: FontWeight.w800,
+          color: AppColors.seniorCreamTextPrimary,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: AppColors.seniorCreamSurface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      ),
+    );
+  }
+
+  /// High-contrast dark theme for senior accessibility toggle.
+  static ThemeData seniorDarkTheme() {
     final base = ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
@@ -63,7 +149,11 @@ class AppTheme {
     );
 
     return base.copyWith(
-      textTheme: _seniorTextTheme(base.textTheme),
+      textTheme: _seniorTextTheme(
+        base.textTheme,
+        primary: AppColors.seniorTextPrimary,
+        secondary: AppColors.seniorTextSecondary,
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(double.infinity, kSeniorCheckInButtonHeight),
@@ -143,47 +233,54 @@ class AppTheme {
     );
   }
 
-  static TextTheme _seniorTextTheme(TextTheme base) {
+  static TextTheme _seniorTextTheme(
+    TextTheme base, {
+    required Color primary,
+    required Color secondary,
+  }) {
     return base.copyWith(
       displayLarge: base.displayLarge?.copyWith(
         fontSize: 40,
         fontWeight: FontWeight.w900,
-        color: AppColors.seniorTextPrimary,
+        color: primary,
       ),
       headlineLarge: base.headlineLarge?.copyWith(
         fontSize: 36,
         fontWeight: FontWeight.w800,
-        color: AppColors.seniorTextPrimary,
+        color: primary,
       ),
       headlineMedium: base.headlineMedium?.copyWith(
         fontSize: kSeniorHeadlineFontSize,
         fontWeight: FontWeight.w800,
-        color: AppColors.seniorTextPrimary,
+        color: primary,
       ),
       titleLarge: base.titleLarge?.copyWith(
         fontSize: 26,
         fontWeight: FontWeight.w700,
-        color: AppColors.seniorTextPrimary,
+        color: primary,
       ),
       bodyLarge: base.bodyLarge?.copyWith(
         fontSize: kSeniorMinFontSize,
         fontWeight: FontWeight.w600,
-        color: AppColors.seniorTextPrimary,
+        color: primary,
         height: 1.5,
       ),
       bodyMedium: base.bodyMedium?.copyWith(
         fontSize: kSeniorMinFontSize,
         fontWeight: FontWeight.w500,
-        color: AppColors.seniorTextSecondary,
+        color: secondary,
         height: 1.5,
       ),
       labelLarge: base.labelLarge?.copyWith(
         fontSize: kSeniorMinFontSize,
         fontWeight: FontWeight.w700,
-        color: AppColors.seniorTextPrimary,
+        color: primary,
       ),
     );
   }
+
+  /// Backward-compatible alias for high-contrast senior theme.
+  static ThemeData seniorTheme() => seniorDarkTheme();
 
   static TextTheme _caregiverTextTheme(TextTheme base) {
     return base.copyWith(
