@@ -1,12 +1,9 @@
 {
   "mcpServers": {
     "firebase": {
-      "command": "npx",
+      "command": "bash",
       "args": [
-        "--registry=https://registry.npmjs.org",
-        "-y",
-        "firebase-tools@latest",
-        "mcp",
+        "scripts/firebase-mcp.sh",
         "--only",
         "core,auth,firestore,storage,messaging"
       ]

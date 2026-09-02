@@ -14,6 +14,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+export NPM_CONFIG_USERCONFIG="$ROOT/.npmrc"
+export NPM_CONFIG_REGISTRY=https://registry.npmjs.org
+export NPM_CONFIG_ALWAYS_AUTH=false
 export PATH="$PATH:$HOME/.pub-cache/bin"
 
 if ! command -v flutterfire >/dev/null 2>&1; then

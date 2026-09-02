@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
+# Start Firebase MCP using the project .npmrc only (avoids invalid tokens in ~/.npmrc).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT"
-
 export NPM_CONFIG_USERCONFIG="$ROOT/.npmrc"
 export NPM_CONFIG_REGISTRY=https://registry.npmjs.org
 export NPM_CONFIG_ALWAYS_AUTH=false
 
-npx --registry=https://registry.npmjs.org --yes firebase-tools@latest deploy --only firestore:rules,firestore:indexes,storage "$@"
+exec npx --registry=https://registry.npmjs.org -y firebase-tools@latest mcp "$@"
