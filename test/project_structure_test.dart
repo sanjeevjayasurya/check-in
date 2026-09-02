@@ -15,6 +15,7 @@ void main() {
   test('feature-first lib structure contains required modules', () {
     const requiredPaths = [
       'lib/core/theme/app_theme.dart',
+      'lib/firebase_options.dart',
       'lib/features/auth/presentation/auth_gate.dart',
       'lib/features/senior_home/presentation/senior_home_screen.dart',
       'lib/features/caregiver_home/presentation/caregiver_home_screen.dart',
@@ -22,6 +23,8 @@ void main() {
       'lib/features/paywall/presentation/paywall_screen.dart',
       'lib/models/user_role.dart',
       'firebase/firestore.rules',
+      'android/app/google-services.json',
+      'ios/Runner/GoogleService-Info.plist',
     ];
 
     for (final path in requiredPaths) {
