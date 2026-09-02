@@ -4,4 +4,4 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-npx --yes firebase-tools@latest deploy --only firestore:rules,firestore:indexes,storage "$@"
+npx --registry=https://registry.npmjs.org --yes firebase-tools@latest deploy --only firestore:rules,firestore:indexes,storage "$@"

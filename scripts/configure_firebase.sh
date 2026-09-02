@@ -21,7 +21,7 @@ if ! command -v flutterfire >/dev/null 2>&1; then
   dart pub global activate flutterfire_cli
 fi
 
-FIREBASE_CMD=(npx --yes firebase-tools@latest)
+FIREBASE_CMD=(npx --registry=https://registry.npmjs.org --yes firebase-tools@latest)
 
 if ! "${FIREBASE_CMD[@]}" projects:list >/dev/null 2>&1; then
   echo ""
